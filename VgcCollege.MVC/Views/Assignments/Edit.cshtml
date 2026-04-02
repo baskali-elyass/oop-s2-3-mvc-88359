@@ -1,0 +1,14 @@
+@model VgcCollege.Domain.Assignment
+@{ ViewData["Title"] = "Edit Assignment"; }
+<h2>Edit Assignment</h2>
+<div class="card p-4" style="max-width:500px">
+    <form asp-action="Edit" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <input asp-for="Id" type="hidden" />
+        <div class="mb-3"><label asp-for="CourseId" class="form-label">Course</label><select asp-for="CourseId" asp-items="ViewBag.Courses" class="form-select"></select></div>
+        <div class="mb-3"><label asp-for="Title" class="form-label"></label><input asp-for="Title" class="form-control" /></div>
+        <div class="mb-3"><label asp-for="MaxScore" class="form-label"></label><input asp-for="MaxScore" class="form-control" type="number" /></div>
+        <div class="mb-3"><label asp-for="DueDate" class="form-label"></label><input asp-for="DueDate" class="form-control" type="date" /></div>
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-primary">Save</button><a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>

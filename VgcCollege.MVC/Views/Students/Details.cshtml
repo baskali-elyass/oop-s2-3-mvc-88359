@@ -1,0 +1,117 @@
+@model VgcCollege.Domain.StudentProfile
+@{ ViewData["Title"] = Model.Name; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@Model.Name <small class="text-muted fs-6">@Model.StudentNumber</small></h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Back</a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h6 class="fw-bold">Contact Details</h6>
+            <p class="mb-1"><strong>Email:</strong> @Model.Email</p>
+            <p class="mb-1"><strong>Phone:</strong> @(Model.Phone ?? "—")</p>
+            <p class="mb-1"><strong>Address:</strong> @(Model.Address ?? "—")</p>
+            @if (Model.DateOfBirth.HasValue)
+            { <p class="mb-0"><strong>DOB:</strong> @Model.DateOfBirth.Value.ToShortDateString()</p> }
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0">Enrolments</h6>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Enrolments" asp-action="Create" asp-route-studentId="@Model.Id" class="btn btn-sm btn-outline-primary">+ Enrol</a>
+                }
+            </div>
+            @if (!Model.Enrolments.Any())
+            { <p class="text-muted">No enrolments.</p> }
+            else
+            {
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Course</th><th>Branch</th><th>Enrolled</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var e in Model.Enrolments)
+                        {
+                            <tr>
+                                <td>@e.Course.Name</td>
+                                <td>@e.Course.Branch.Name</td>
+                                <td>@e.EnrolDate.ToShortDateString()</td>
+                                <td><span class="badge @(e.Status=="Active"?"bg-success":"bg-secondary")">@e.Status</span></td>
+                                <td>
+                                    @if (User.IsInRole("Admin") || User.IsInRole("Faculty"))
+                                    {
+                                        <a asp-controller="Attendance" asp-action="Index" asp-route-enrolmentId="@e.Id" class="btn btn-sm btn-outline-info">Attendance</a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="fw-bold">Assignment Results</h6>
+            @if (!Model.AssignmentResults.Any())
+            { <p class="text-muted">No results yet.</p> }
+            else
+            {
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Assignment</th><th>Course</th><th>Score</th><th>Feedback</th></tr></thead>
+                    <tbody>
+                        @foreach (var r in Model.AssignmentResults)
+                        {
+                            <tr>
+                                <td>@r.Assignment.Title</td>
+                                <td>@r.Assignment.Course.Name</td>
+                                <td><strong>@r.Score / @r.Assignment.MaxScore</strong></td>
+                                <td><small class="text-muted">@r.Feedback</small></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="fw-bold">Exam Results</h6>
+            @if (!Model.ExamResults.Any())
+            {
+                @if (User.IsInRole("Student"))
+                { <p class="text-muted">No released results yet.</p> }
+                else
+                { <p class="text-muted">No results yet.</p> }
+            }
+            else
+            {
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Exam</th><th>Course</th><th>Score</th><th>Grade</th><th>Status</th></tr></thead>
+                    <tbody>
+                        @foreach (var r in Model.ExamResults)
+                        {
+                            <tr>
+                                <td>@r.Exam.Title</td>
+                                <td>@r.Exam.Course.Name</td>
+                                <td><strong>@r.Score / @r.Exam.MaxScore</strong></td>
+                                <td><span class="badge bg-primary">@r.Grade</span></td>
+                                <td>
+                                    @if (r.Exam.ResultsReleased)
+                                    { <span class="badge bg-success">Released</span> }
+                                    else
+                                    { <span class="badge bg-warning text-dark">Provisional</span> }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>

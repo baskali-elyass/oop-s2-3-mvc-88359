@@ -1,0 +1,15 @@
+@model VgcCollege.Domain.ExamResult
+@{ ViewData["Title"] = "Add Exam Result"; var exam = ViewBag.Exam as VgcCollege.Domain.Exam; }
+<h2>Add Exam Result</h2>
+@if (exam != null) { <p class="text-muted">@exam.Title — Max: @exam.MaxScore</p> }
+<div class="card p-4" style="max-width:500px">
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <input asp-for="ExamId" type="hidden" />
+        <div class="mb-3"><label asp-for="StudentProfileId" class="form-label">Student</label><select asp-for="StudentProfileId" asp-items="ViewBag.Students" class="form-select"><option value="">-- Select --</option></select></div>
+        <div class="mb-3"><label asp-for="Score" class="form-label"></label><input asp-for="Score" class="form-control" type="number" step="0.5" /><span asp-validation-for="Score" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="Grade" class="form-label">Grade (e.g. A1, B2, C3)</label><input asp-for="Grade" class="form-control" maxlength="10" /></div>
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-primary">Save</button><a asp-action="Index" asp-route-examId="@Model.ExamId" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

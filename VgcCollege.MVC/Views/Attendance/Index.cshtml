@@ -1,0 +1,47 @@
+@model IEnumerable<VgcCollege.Domain.AttendanceRecord>
+@{ ViewData["Title"] = "Attendance"; var enrolment = ViewBag.Enrolment as VgcCollege.Domain.CourseEnrolment; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2>Attendance</h2>
+        @if (enrolment != null)
+        { <p class="text-muted mb-0">@enrolment.StudentProfile.Name — @enrolment.Course.Name</p> }
+    </div>
+    @if (enrolment != null)
+    {
+        <a asp-action="Create" asp-route-enrolmentId="@enrolment.Id" class="btn btn-primary">+ Record Week</a>
+    }
+</div>
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No attendance records yet.</div>
+}
+else
+{
+    var presentCount = Model.Count(a => a.Present);
+    var totalCount = Model.Count();
+    var pct = totalCount > 0 ? (presentCount * 100 / totalCount) : 0;
+    <div class="alert @(pct >= 75 ? "alert-success" : "alert-warning") mb-3">
+        Attendance: <strong>@presentCount / @totalCount weeks (@pct%)</strong>
+    </div>
+    <div class="card"><div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Week</th><th>Date</th><th>Present</th><th>Notes</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    <tr>
+                        <td>Week @r.WeekNumber</td>
+                        <td>@r.SessionDate.ToShortDateString()</td>
+                        <td>@if (r.Present) { <span class="badge bg-success">✓ Present</span> } else { <span class="badge bg-danger">✗ Absent</span> }</td>
+                        <td><small class="text-muted">@r.Notes</small></td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@r.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+}
+<a asp-controller="Enrolments" asp-action="Index" class="btn btn-outline-secondary mt-3">← Back to Enrolments</a>

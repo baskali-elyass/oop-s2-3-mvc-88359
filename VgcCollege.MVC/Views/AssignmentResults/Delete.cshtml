@@ -1,0 +1,10 @@
+@model VgcCollege.Domain.AssignmentResult
+@{ ViewData["Title"] = "Delete Result"; }
+<h2>Delete Result</h2>
+<div class="card p-4" style="max-width:500px">
+    <div class="alert alert-danger">Delete result for <strong>@Model.StudentProfile.Name</strong> on <strong>@Model.Assignment.Title</strong>?</div>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-danger">Delete</button><a asp-action="Index" asp-route-assignmentId="@Model.AssignmentId" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>

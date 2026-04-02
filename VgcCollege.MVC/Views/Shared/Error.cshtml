@@ -1,0 +1,10 @@
+@model VgcCollege.MVC.Models.ErrorViewModel
+@{ ViewData["Title"] = "Error"; }
+<div class="text-center mt-5">
+    <h1 class="text-danger">An error occurred.</h1>
+    @if (Model.ShowRequestId)
+    {
+        <p>Request ID: <code>@Model.RequestId</code></p>
+    }
+    <a asp-controller="Dashboard" asp-action="Index" class="btn btn-primary mt-3">Back to Dashboard</a>
+</div>

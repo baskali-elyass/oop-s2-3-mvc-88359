@@ -1,0 +1,10 @@
+@model VgcCollege.Domain.Exam
+@{ ViewData["Title"] = "Delete Exam"; }
+<h2>Delete Exam</h2>
+<div class="card p-4" style="max-width:500px">
+    <div class="alert alert-danger">Delete <strong>@Model.Title</strong>? All exam results will also be deleted.</div>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-danger">Delete</button><a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>

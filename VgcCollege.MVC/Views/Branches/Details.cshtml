@@ -1,0 +1,30 @@
+@model VgcCollege.Domain.Branch
+@{ ViewData["Title"] = Model.Name; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@Model.Name</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Back</a>
+</div>
+<div class="card p-3 mb-3" style="max-width:500px">
+    <p><strong>Address:</strong> @Model.Address</p>
+    <p class="mb-0"><strong>Courses:</strong> @Model.Courses.Count</p>
+</div>
+@if (Model.Courses.Any())
+{
+    <h5>Courses at this Branch</h5>
+    <div class="card"><div class="card-body p-0">
+        <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Course</th><th>Start</th><th>End</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var c in Model.Courses)
+                {
+                    <tr>
+                        <td>@c.Name</td>
+                        <td>@c.StartDate.ToShortDateString()</td>
+                        <td>@c.EndDate.ToShortDateString()</td>
+                        <td><a asp-controller="Courses" asp-action="Details" asp-route-id="@c.Id" class="btn btn-sm btn-outline-secondary">View</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+}

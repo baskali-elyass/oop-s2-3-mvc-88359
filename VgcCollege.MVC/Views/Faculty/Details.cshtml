@@ -1,0 +1,41 @@
+@model VgcCollege.Domain.FacultyProfile
+@{ ViewData["Title"] = Model.Name; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@Model.Name</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Back</a>
+</div>
+<div class="card p-3 mb-3" style="max-width:400px">
+    <p class="mb-1"><strong>Email:</strong> @Model.Email</p>
+    <p class="mb-0"><strong>Phone:</strong> @(Model.Phone ?? "—")</p>
+</div>
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h5>Course Assignments (@Model.CourseAssignments.Count)</h5>
+    <a asp-action="Assign" asp-route-id="@Model.Id" class="btn btn-sm btn-primary">+ Assign Course</a>
+</div>
+@if (!Model.CourseAssignments.Any())
+{ <div class="alert alert-info">No courses assigned.</div> }
+else
+{
+    <div class="card"><div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Course</th><th>Branch</th><th>Role</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var a in Model.CourseAssignments)
+                {
+                    <tr>
+                        <td><a asp-controller="Courses" asp-action="Details" asp-route-id="@a.CourseId">@a.Course.Name</a></td>
+                        <td>@a.Course.Branch.Name</td>
+                        <td>@(a.IsTutor ? "Tutor" : "Teacher")</td>
+                        <td class="text-end">
+                            <form asp-action="Unassign" method="post" class="d-inline">
+                                <input type="hidden" name="id" value="@a.Id" />
+                                <input type="hidden" name="facultyId" value="@Model.Id" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+}

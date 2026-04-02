@@ -1,0 +1,16 @@
+@model VgcCollege.Domain.AssignmentResult
+@{ ViewData["Title"] = "Edit Result"; }
+<h2>Edit Result</h2>
+<p class="text-muted">@Model.Assignment.Title — @Model.StudentProfile.Name</p>
+<div class="card p-4" style="max-width:500px">
+    <form asp-action="Edit" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="AssignmentId" type="hidden" />
+        <input asp-for="StudentProfileId" type="hidden" />
+        <input asp-for="SubmittedAt" type="hidden" />
+        <div class="mb-3"><label asp-for="Score" class="form-label"></label><input asp-for="Score" class="form-control" type="number" step="0.5" /><span asp-validation-for="Score" class="text-danger"></span></div>
+        <div class="mb-3"><label asp-for="Feedback" class="form-label"></label><textarea asp-for="Feedback" class="form-control" rows="3"></textarea></div>
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-primary">Save</button><a asp-action="Index" asp-route-assignmentId="@Model.AssignmentId" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>

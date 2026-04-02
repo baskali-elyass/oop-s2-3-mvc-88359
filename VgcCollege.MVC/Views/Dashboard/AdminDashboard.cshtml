@@ -1,0 +1,53 @@
+@model VgcCollege.MVC.Models.AdminDashboardViewModel
+@{ ViewData["Title"] = "Admin Dashboard"; }
+<h2 class="mb-4">Admin Dashboard</h2>
+<div class="row g-3 mb-4">
+    <div class="col-md-2">
+        <div class="card text-center p-3">
+            <div class="fs-1">👨‍🎓</div>
+            <div class="fs-3 fw-bold">@Model.TotalStudents</div>
+            <div class="text-muted small">Students</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center p-3">
+            <div class="fs-1">📚</div>
+            <div class="fs-3 fw-bold">@Model.TotalCourses</div>
+            <div class="text-muted small">Courses</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center p-3">
+            <div class="fs-1">🏫</div>
+            <div class="fs-3 fw-bold">@Model.TotalBranches</div>
+            <div class="text-muted small">Branches</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center p-3">
+            <div class="fs-1">👩‍🏫</div>
+            <div class="fs-3 fw-bold">@Model.TotalFaculty</div>
+            <div class="text-muted small">Faculty</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center p-3">
+            <div class="fs-1">📌</div>
+            <div class="fs-3 fw-bold">@Model.ActiveEnrolments</div>
+            <div class="text-muted small">Active Enrolments</div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-center p-3 @(Model.PendingExamReleases > 0 ? "border-warning" : "")">
+            <div class="fs-1">⏳</div>
+            <div class="fs-3 fw-bold @(Model.PendingExamReleases > 0 ? "text-warning" : "")">@Model.PendingExamReleases</div>
+            <div class="text-muted small">Pending Releases</div>
+        </div>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-md-3"><a asp-controller="Students" asp-action="Index" class="btn btn-outline-primary w-100">Manage Students</a></div>
+    <div class="col-md-3"><a asp-controller="Courses" asp-action="Index" class="btn btn-outline-primary w-100">Manage Courses</a></div>
+    <div class="col-md-3"><a asp-controller="Enrolments" asp-action="Index" class="btn btn-outline-primary w-100">Manage Enrolments</a></div>
+    <div class="col-md-3"><a asp-controller="Exams" asp-action="Index" class="btn btn-outline-warning w-100">Release Exam Results</a></div>
+</div>

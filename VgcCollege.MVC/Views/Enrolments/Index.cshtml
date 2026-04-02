@@ -1,0 +1,43 @@
+@model IEnumerable<VgcCollege.Domain.CourseEnrolment>
+@{ ViewData["Title"] = "Enrolments"; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Enrolments</h2>
+    <a asp-action="Create" class="btn btn-primary">+ New Enrolment</a>
+</div>
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <select name="courseId" asp-items="ViewBag.Courses" class="form-select">
+            <option value="">All Courses</option>
+        </select>
+    </div>
+    <div class="col-md-4">
+        <select name="studentId" asp-items="ViewBag.Students" class="form-select">
+            <option value="">All Students</option>
+        </select>
+    </div>
+    <div class="col-auto"><button type="submit" class="btn btn-outline-secondary">Filter</button></div>
+</form>
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Student</th><th>Course</th><th>Branch</th><th>Enrolled</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td><a asp-controller="Students" asp-action="Details" asp-route-id="@e.StudentProfileId">@e.StudentProfile.Name</a></td>
+                        <td><a asp-controller="Courses" asp-action="Details" asp-route-id="@e.CourseId">@e.Course.Name</a></td>
+                        <td>@e.Course.Branch.Name</td>
+                        <td>@e.EnrolDate.ToShortDateString()</td>
+                        <td><span class="badge @(e.Status=="Active"?"bg-success":"bg-secondary")">@e.Status</span></td>
+                        <td class="text-end">
+                            <a asp-controller="Attendance" asp-action="Index" asp-route-enrolmentId="@e.Id" class="btn btn-sm btn-outline-info">Attendance</a>
+                            <a asp-action="Edit" asp-route-id="@e.Id" class="btn btn-sm btn-outline-primary ms-1">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@e.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

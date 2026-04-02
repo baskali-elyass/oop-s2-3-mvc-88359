@@ -1,0 +1,15 @@
+@model VgcCollege.Domain.CourseEnrolment
+@{ ViewData["Title"] = "Edit Enrolment"; }
+<h2>Edit Enrolment</h2>
+<div class="card p-4" style="max-width:500px">
+    <form asp-action="Edit" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <input asp-for="Id" type="hidden" />
+        <div class="mb-3"><label asp-for="StudentProfileId" class="form-label">Student</label><select asp-for="StudentProfileId" asp-items="ViewBag.Students" class="form-select"></select></div>
+        <div class="mb-3"><label asp-for="CourseId" class="form-label">Course</label><select asp-for="CourseId" asp-items="ViewBag.Courses" class="form-select"></select></div>
+        <div class="mb-3"><label asp-for="EnrolDate" class="form-label"></label><input asp-for="EnrolDate" class="form-control" type="date" /></div>
+        <div class="mb-3"><label asp-for="Status" class="form-label"></label>
+            <select asp-for="Status" class="form-select"><option>Active</option><option>Completed</option><option>Withdrawn</option></select></div>
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-primary">Save</button><a asp-action="Index" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>

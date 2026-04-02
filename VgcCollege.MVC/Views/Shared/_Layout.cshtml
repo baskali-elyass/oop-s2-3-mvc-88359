@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Acme Global College</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <style>
+        body { background-color: #f8f9fa; }
+        .navbar-brand { font-weight: 700; letter-spacing: 1px; }
+        .sidebar { min-height: calc(100vh - 56px); background: #212529; }
+        .sidebar .nav-link { color: #adb5bd; padding: .5rem 1rem; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: rgba(255,255,255,.1); border-radius: .25rem; }
+        .sidebar .nav-section { color: #6c757d; font-size: .75rem; text-transform: uppercase; letter-spacing: .05em; padding: .75rem 1rem .25rem; }
+        .content-area { padding: 1.5rem; }
+        .card { border: none; box-shadow: 0 .125rem .5rem rgba(0,0,0,.08); }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark bg-dark px-3">
+    <a class="navbar-brand" asp-controller="Dashboard" asp-action="Index">🎓 Acme Global College</a>
+    <div class="ms-auto">
+        <partial name="_LoginPartial" />
+    </div>
+</nav>
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 d-none d-md-block sidebar py-3">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : "")"
+                       asp-controller="Dashboard" asp-action="Index">🏠 Dashboard</a>
+                </li>
+
+                @if (User.IsInRole("Admin") || User.IsInRole("Faculty"))
+                {
+                    <li><span class="nav-section">Academic</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")"
+                           asp-controller="Students" asp-action="Index">👨‍🎓 Students</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Assignments" ? "active" : "")"
+                           asp-controller="Assignments" asp-action="Index">📝 Assignments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Exams" ? "active" : "")"
+                           asp-controller="Exams" asp-action="Index">📋 Exams</a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Student"))
+                {
+                    <li><span class="nav-section">My Studies</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Students" ? "active" : "")"
+                           asp-controller="Students" asp-action="Index">👤 My Profile</a>
+                    </li>
+                }
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <li><span class="nav-section">Management</span></li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Enrolments" ? "active" : "")"
+                           asp-controller="Enrolments" asp-action="Index">📌 Enrolments</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Courses" ? "active" : "")"
+                           asp-controller="Courses" asp-action="Index">📚 Courses</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Branches" ? "active" : "")"
+                           asp-controller="Branches" asp-action="Index">🏫 Branches</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Faculty" ? "active" : "")"
+                           asp-controller="Faculty" asp-action="Index">👩‍🏫 Faculty</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+
+        <main class="col-md-10 content-area">
+            @if (TempData["Success"] is string success)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @success <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["Error"] is string error)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @error <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+</div>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

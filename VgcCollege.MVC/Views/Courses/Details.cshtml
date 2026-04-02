@@ -1,0 +1,86 @@
+@model VgcCollege.Domain.Course
+@{ ViewData["Title"] = Model.Name; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>@Model.Name</h2>
+    <a asp-action="Index" class="btn btn-outline-secondary">← Back</a>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <p class="mb-1"><strong>Branch:</strong> @Model.Branch.Name</p>
+            <p class="mb-1"><strong>Start:</strong> @Model.StartDate.ToShortDateString()</p>
+            <p class="mb-0"><strong>End:</strong> @Model.EndDate.ToShortDateString()</p>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="fw-bold mb-0">Faculty Assigned</h6>
+                <a asp-controller="Faculty" asp-action="Index" class="btn btn-sm btn-outline-secondary">Manage Faculty</a>
+            </div>
+            @if (!Model.FacultyAssignments.Any()) { <p class="text-muted">No faculty assigned.</p> }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var a in Model.FacultyAssignments)
+                    {
+                        <li>@a.FacultyProfile.Name @if (a.IsTutor) { <span class="badge bg-info text-dark ms-1">Tutor</span> }</li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+</div>
+<div class="row g-3 mb-3">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="fw-bold mb-0">Students Enrolled (@Model.Enrolments.Count)</h6>
+                <a asp-controller="Enrolments" asp-action="Create" asp-route-courseId="@Model.Id" class="btn btn-sm btn-outline-primary">+ Enrol</a>
+            </div>
+            @if (!Model.Enrolments.Any()) { <p class="text-muted">No enrolments.</p> }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var e in Model.Enrolments)
+                    {
+                        <li><a asp-controller="Students" asp-action="Details" asp-route-id="@e.StudentProfileId">@e.StudentProfile.Name</a>
+                            <span class="badge @(e.Status=="Active"?"bg-success":"bg-secondary") ms-1">@e.Status</span></li>
+                    }
+                </ul>
+            }
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between mb-2">
+                <h6 class="fw-bold mb-0">Assignments (@Model.Assignments.Count)</h6>
+                <a asp-controller="Assignments" asp-action="Create" asp-route-courseId="@Model.Id" class="btn btn-sm btn-outline-primary">+ Add</a>
+            </div>
+            @foreach (var a in Model.Assignments)
+            {
+                <div class="d-flex justify-content-between">
+                    <span>@a.Title</span>
+                    <a asp-controller="AssignmentResults" asp-action="Index" asp-route-assignmentId="@a.Id" class="btn btn-sm btn-outline-secondary">Results</a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<div class="card p-3">
+    <div class="d-flex justify-content-between mb-2">
+        <h6 class="fw-bold mb-0">Exams (@Model.Exams.Count)</h6>
+        <a asp-controller="Exams" asp-action="Create" asp-route-courseId="@Model.Id" class="btn btn-sm btn-outline-primary">+ Add</a>
+    </div>
+    @foreach (var e in Model.Exams)
+    {
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <span>@e.Title <small class="text-muted">(@e.Date.ToShortDateString())</small></span>
+            <div class="d-flex gap-1 align-items-center">
+                @if (e.ResultsReleased) { <span class="badge bg-success">Released</span> }
+                else { <span class="badge bg-warning text-dark">Provisional</span> }
+                <a asp-controller="ExamResults" asp-action="Index" asp-route-examId="@e.Id" class="btn btn-sm btn-outline-secondary">Results</a>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,11 @@
+@model VgcCollege.Domain.AttendanceRecord
+@{ ViewData["Title"] = "Delete Attendance Record"; }
+<h2>Delete Attendance Record</h2>
+<div class="card p-4" style="max-width:400px">
+    <div class="alert alert-danger">Delete attendance record for <strong>Week @Model.WeekNumber</strong>?</div>
+    <p><strong>Student:</strong> @Model.CourseEnrolment.StudentProfile.Name</p>
+    <form asp-action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-danger">Delete</button><a asp-action="Index" asp-route-enrolmentId="@Model.CourseEnrolmentId" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>

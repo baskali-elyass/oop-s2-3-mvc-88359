@@ -1,0 +1,39 @@
+@model IEnumerable<VgcCollege.Domain.ExamResult>
+@{ ViewData["Title"] = "Exam Results"; var exam = ViewBag.Exam as VgcCollege.Domain.Exam; }
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2>Exam Results</h2>
+        @if (exam != null) { <p class="text-muted mb-0">@exam.Title — @exam.Course.Name (max @exam.MaxScore)
+            @if (exam.ResultsReleased) { <span class="badge bg-success ms-2">Released</span> } else { <span class="badge bg-warning text-dark ms-2">Provisional</span> }
+        </p> }
+    </div>
+    @if (exam != null)
+    { <a asp-action="Create" asp-route-examId="@exam.Id" class="btn btn-primary">+ Add Result</a> }
+</div>
+@if (!Model.Any()) { <div class="alert alert-info">No results yet.</div> }
+else
+{
+    <div class="card"><div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light"><tr><th>Student</th><th>Score</th><th>%</th><th>Grade</th><th></th></tr></thead>
+            <tbody>
+                @foreach (var r in Model)
+                {
+                    var max = exam?.MaxScore ?? 100;
+                    var pct = max > 0 ? (int)(r.Score * 100 / max) : 0;
+                    <tr>
+                        <td><a asp-controller="Students" asp-action="Details" asp-route-id="@r.StudentProfileId">@r.StudentProfile.Name</a></td>
+                        <td><strong>@r.Score / @max</strong></td>
+                        <td><span class="badge @(pct >= 40 ? "bg-success" : "bg-danger")">@pct%</span></td>
+                        <td><span class="badge bg-primary">@r.Grade</span></td>
+                        <td class="text-end">
+                            <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-outline-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@r.Id" class="btn btn-sm btn-outline-danger ms-1">Delete</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div></div>
+}
+<a asp-controller="Exams" asp-action="Index" class="btn btn-outline-secondary mt-3">← Back to Exams</a>

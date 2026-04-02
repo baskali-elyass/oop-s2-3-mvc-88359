@@ -1,0 +1,28 @@
+@model VgcCollege.MVC.Models.StudentDashboardViewModel
+@{ ViewData["Title"] = "My Dashboard"; }
+<h2 class="mb-1">Welcome, @Model.StudentName</h2>
+<p class="text-muted mb-4">Student ID: @Model.StudentNumber</p>
+<h5>My Enrolments</h5>
+@if (!Model.MyEnrolments.Any())
+{
+    <div class="alert alert-info">You are not enrolled in any courses yet.</div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var e in Model.MyEnrolments)
+        {
+            <div class="col-md-4">
+                <div class="card p-3">
+                    <h6 class="fw-bold">@e.Course.Name</h6>
+                    <small class="text-muted">@e.Course.Branch.Name</small>
+                    <small class="d-block text-muted">Enrolled: @e.EnrolDate.ToShortDateString()</small>
+                    <span class="badge @(e.Status == "Active" ? "bg-success" : "bg-secondary") mt-1">@e.Status</span>
+                </div>
+            </div>
+        }
+    </div>
+}
+<div class="mt-4">
+    <a asp-controller="Students" asp-action="Index" class="btn btn-outline-primary">View Full Profile & Grades</a>
+</div>

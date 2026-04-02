@@ -1,0 +1,20 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+@if (SignInManager.IsSignedIn(User))
+{
+    <span class="text-light me-3">
+        @if (User.IsInRole("Admin")) { <span class="badge bg-danger me-1">Admin</span> }
+        @if (User.IsInRole("Faculty")) { <span class="badge bg-warning text-dark me-1">Faculty</span> }
+        @if (User.IsInRole("Student")) { <span class="badge bg-info text-dark me-1">Student</span> }
+        @UserManager.GetUserName(User)
+    </span>
+    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="/" method="post" class="d-inline">
+        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+    </form>
+}
+else
+{
+    <a class="btn btn-outline-light btn-sm me-2" asp-area="Identity" asp-page="/Account/Login">Login</a>
+}

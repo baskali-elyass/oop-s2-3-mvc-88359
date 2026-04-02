@@ -1,0 +1,15 @@
+@model VgcCollege.Domain.AttendanceRecord
+@{ ViewData["Title"] = "Edit Attendance"; }
+<h2>Edit Attendance</h2>
+<div class="card p-4" style="max-width:400px">
+    <form asp-action="Edit" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+        <input asp-for="Id" type="hidden" />
+        <input asp-for="CourseEnrolmentId" type="hidden" />
+        <div class="mb-3"><label asp-for="WeekNumber" class="form-label"></label><input asp-for="WeekNumber" class="form-control" type="number" min="1" /></div>
+        <div class="mb-3"><label asp-for="SessionDate" class="form-label"></label><input asp-for="SessionDate" class="form-control" type="date" /></div>
+        <div class="mb-3 form-check"><input asp-for="Present" class="form-check-input" /><label asp-for="Present" class="form-check-label">Present</label></div>
+        <div class="mb-3"><label asp-for="Notes" class="form-label"></label><input asp-for="Notes" class="form-control" /></div>
+        <div class="d-flex gap-2"><button type="submit" class="btn btn-primary">Save</button><a asp-action="Index" asp-route-enrolmentId="@Model.CourseEnrolmentId" class="btn btn-outline-secondary">Cancel</a></div>
+    </form>
+</div>

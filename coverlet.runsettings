@@ -6,10 +6,14 @@
         <Configuration>
           <Format>cobertura</Format>
           <Exclude>[*.Tests]*</Exclude>
-          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute</ExcludeByAttribute>
-          <ExcludeByFile>**/Migrations/**/*.cs,**/wwwroot/**</ExcludeByFile>
+          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <ExcludeByFile>**/Migrations/**/*.cs,**/wwwroot/**,**/obj/**</ExcludeByFile>
           <SingleHit>false</SingleHit>
           <IncludeTestAssembly>false</IncludeTestAssembly>
+          <SkipAutoProps>true</SkipAutoProps>
+          <DeterministicReport>true</DeterministicReport>
+          <UseSourceLink>false</UseSourceLink>
+          <InstrumentationStrategy>CoveragePerMethod</InstrumentationStrategy>
         </Configuration>
       </DataCollector>
     </DataCollectors>

@@ -10,7 +10,7 @@ using VgcCollege.MVC.Data;
 
 namespace VgcCollege.Tests;
 
-// ─── DB Factory ─────────────────────────────────────────────────────────────
+
 
 file static class DbFactory
 {
@@ -45,8 +45,6 @@ file static class DbFactory
     public static ITempDataDictionary FakeTempData() =>
         new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>());
 }
-
-// ─── Domain: Branch & Course ─────────────────────────────────────────────────
 
 public class BranchDomainTests
 {
@@ -86,8 +84,6 @@ public class CourseDomainTests
     }
 }
 
-// ─── Domain: Student & Enrolment ─────────────────────────────────────────────
-
 public class StudentDomainTests
 {
     [Fact]
@@ -106,8 +102,6 @@ public class StudentDomainTests
         Assert.Equal("Active", e.Status);
     }
 }
-
-// ─── Business Logic: Enrolment Rules ─────────────────────────────────────────
 
 public class EnrolmentRuleTests
 {
@@ -162,8 +156,6 @@ public class EnrolmentRuleTests
         await ctx.DisposeAsync();
     }
 }
-
-// ─── Business Logic: Exam Visibility ─────────────────────────────────────────
 
 public class ExamVisibilityTests
 {
@@ -237,8 +229,6 @@ public class ExamVisibilityTests
     }
 }
 
-// ─── Business Logic: Grade Validation ────────────────────────────────────────
-
 public class GradeValidationTests
 {
     [Fact]
@@ -280,8 +270,6 @@ public class GradeValidationTests
         await ctx.DisposeAsync();
     }
 }
-
-// ─── Business Logic: Faculty RBAC Filtering ──────────────────────────────────
 
 public class FacultyAuthorizationTests
 {
@@ -337,8 +325,6 @@ public class FacultyAuthorizationTests
         await ctx.DisposeAsync();
     }
 }
-
-// ─── Controllers: BranchesController ─────────────────────────────────────────
 
 public class BranchesControllerTests
 {
@@ -411,8 +397,6 @@ public class BranchesControllerTests
     }
 }
 
-// ─── Controllers: CoursesController ──────────────────────────────────────────
-
 public class CoursesControllerTests
 {
     [Fact]
@@ -441,8 +425,6 @@ public class CoursesControllerTests
     }
 }
 
-// ─── Controllers: EnrolmentsController ───────────────────────────────────────
-
 public class EnrolmentsControllerTests
 {
     [Fact]
@@ -462,7 +444,10 @@ public class EnrolmentsControllerTests
         var ctrl = new EnrolmentsController(ctx);
         var result = await ctrl.Create(new CourseEnrolment
         {
-            StudentProfileId = student.Id, CourseId = course.Id, EnrolDate = DateTime.Today, Status = "Active"
+            StudentProfileId = student.Id,
+            CourseId = course.Id,
+            EnrolDate = DateTime.Today,
+            Status = "Active"
         });
         Assert.IsType<ViewResult>(result);
         Assert.False(ctrl.ModelState.IsValid);
@@ -479,8 +464,6 @@ public class EnrolmentsControllerTests
         await ctx.DisposeAsync();
     }
 }
-
-// ─── Tests supplémentaires pour augmenter la couverture ──────────────────────
 
 public class AssignmentBusinessLogicTests
 {
@@ -921,12 +904,6 @@ public class EnrolmentsControllerEditTests
     }
 }
 
-// ════════════════════════════════════════════════════════════════════════════
-// COLLE CE BLOC ENTIER À LA FIN DE Tests.cs (après la dernière accolade })
-// ════════════════════════════════════════════════════════════════════════════
-
-// ─── AssignmentsController ───────────────────────────────────────────────────
-
 public class AssignmentsControllerTests
 {
     [Fact]
@@ -1125,8 +1102,6 @@ public class AssignmentsControllerTests
     }
 }
 
-// ─── AssignmentResultsController ─────────────────────────────────────────────
-
 public class AssignmentResultsControllerTests
 {
     [Fact]
@@ -1304,8 +1279,6 @@ public class AssignmentResultsControllerTests
     }
 }
 
-// ─── ExamsController ──────────────────────────────────────────────────────────
-
 public class ExamsControllerTests
 {
     [Fact]
@@ -1465,8 +1438,6 @@ public class ExamsControllerTests
     }
 }
 
-// ─── ExamResultsController ────────────────────────────────────────────────────
-
 public class ExamResultsControllerTests
 {
     [Fact]
@@ -1604,8 +1575,6 @@ public class ExamResultsControllerTests
         Assert.IsType<NotFoundResult>(await ctrl.DeleteConfirmed(999));
     }
 }
-
-// ─── AttendanceController ─────────────────────────────────────────────────────
 
 public class AttendanceControllerTests
 {
@@ -1747,8 +1716,6 @@ public class AttendanceControllerTests
         Assert.IsType<NotFoundResult>(await ctrl.DeleteConfirmed(999));
     }
 }
-
-// ─── FacultyController ────────────────────────────────────────────────────────
 
 public class FacultyControllerTests
 {
@@ -1927,10 +1894,6 @@ public class FacultyControllerTests
     }
 }
 
-// ─── Helper : MockUserManager ─────────────────────────────────────────────────
-// Nécessaire pour les controllers qui acceptent UserManager en paramètre
-// mais dont les tests n'ont pas besoin de l'identité (rôle Admin simulé)
-
 file static class MockUserManager
 {
     public static UserManager<IdentityUser> Create()
@@ -1941,7 +1904,6 @@ file static class MockUserManager
         ).Object;
     }
 
-    // Simule un utilisateur Admin (IsInRole("Faculty") retourne false)
     public static void SetupAdminUser(Controller ctrl)
     {
         var claims = new System.Security.Claims.ClaimsPrincipal(
@@ -1954,5 +1916,468 @@ file static class MockUserManager
         {
             HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext { User = claims }
         };
+    }
+}
+
+file static class RoleHelper
+{
+    public static void SetRole(Controller ctrl, string role, string userId = "test-user-id")
+    {
+        var claims = new List<System.Security.Claims.Claim>
+        {
+            new(System.Security.Claims.ClaimTypes.Name, userId),
+            new(System.Security.Claims.ClaimTypes.NameIdentifier, userId),
+            new(System.Security.Claims.ClaimTypes.Role, role),
+        };
+        var identity = new System.Security.Claims.ClaimsIdentity(claims, "TestAuth");
+        var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+        ctrl.ControllerContext = new ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext { User = principal }
+        };
+    }
+
+    public static UserManager<IdentityUser> CreateWithUserId(string userId)
+    {
+        var store = new Mock<IUserStore<IdentityUser>>();
+        var mgr = new Mock<UserManager<IdentityUser>>(
+            store.Object, null!, null!, null!, null!, null!, null!, null!, null!);
+        mgr.Setup(m => m.GetUserId(It.IsAny<System.Security.Claims.ClaimsPrincipal>()))
+           .Returns(userId);
+        return mgr.Object;
+    }
+}
+
+public class DashboardControllerBranchTests
+{
+    [Fact]
+    public async Task Index_AsAdmin_ReturnsAdminDashboard()
+    {
+        var (ctx, _, _) = await DbFactory.WithCourseAsync();
+        var um = RoleHelper.CreateWithUserId("admin-id");
+        var ctrl = new DashboardController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Admin", "admin-id");
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("AdminDashboard", view.ViewName);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Index_AsFaculty_WithProfile_ReturnsFacultyDashboard()
+    {
+        var (ctx, _, course) = await DbFactory.WithCourseAsync();
+        var faculty = new FacultyProfile { IdentityUserId = "fac-id", Name = "Dr F", Email = "f@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+        var um = RoleHelper.CreateWithUserId("fac-id");
+        var ctrl = new DashboardController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-id");
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("FacultyDashboard", view.ViewName);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Index_AsFaculty_WithoutProfile_ReturnsNoProfile()
+    {
+        var ctx = DbFactory.Create();
+        var um = RoleHelper.CreateWithUserId("fac-unknown");
+        var ctrl = new DashboardController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-unknown");
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("NoProfile", view.ViewName);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Index_AsStudent_WithProfile_ReturnsStudentDashboard()
+    {
+        var (ctx, _, _, enrolment) = await DbFactory.WithEnrolmentAsync();
+        var student = await ctx.StudentProfiles.FindAsync(enrolment.StudentProfileId);
+        var um = RoleHelper.CreateWithUserId(student!.IdentityUserId);
+        var ctrl = new DashboardController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Student", student.IdentityUserId);
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("StudentDashboard", view.ViewName);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Index_AsStudent_WithoutProfile_ReturnsNoProfile()
+    {
+        var ctx = DbFactory.Create();
+        var um = RoleHelper.CreateWithUserId("stu-unknown");
+        var ctrl = new DashboardController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Student", "stu-unknown");
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        Assert.Equal("NoProfile", view.ViewName);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Index_NoRole_ReturnsFallbackView()
+    {
+        var ctx = DbFactory.Create();
+        var um = RoleHelper.CreateWithUserId("no-role");
+        var ctrl = new DashboardController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Unknown", "no-role");
+
+        var result = await ctrl.Index();
+
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+}
+
+public class StudentsControllerBranchTests
+{
+    [Fact]
+    public async Task Index_AsAdmin_ReturnsAllStudents()
+    {
+        var (ctx, _, _, _) = await DbFactory.WithEnrolmentAsync();
+        var um = RoleHelper.CreateWithUserId("admin-id");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Admin", "admin-id");
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsAssignableFrom<IEnumerable<StudentProfile>>(view.Model);
+        Assert.Single(model);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Index_AsFaculty_WithProfile_ReturnsTheirStudents()
+    {
+        var (ctx, course, student, _) = await DbFactory.WithEnrolmentAsync();
+        var faculty = new FacultyProfile { IdentityUserId = "fac-id", Name = "Dr F", Email = "f@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+        ctx.FacultyCourseAssignments.Add(new FacultyCourseAssignment { FacultyProfileId = faculty.Id, CourseId = course.Id });
+        await ctx.SaveChangesAsync();
+        var um = RoleHelper.CreateWithUserId("fac-id");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-id");
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsAssignableFrom<IEnumerable<StudentProfile>>(view.Model);
+        Assert.Single(model);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Index_AsStudent_WithProfile_ReturnsSelf()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var um = RoleHelper.CreateWithUserId(student.IdentityUserId);
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Student", student.IdentityUserId);
+
+        var result = await ctrl.Index();
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsAssignableFrom<IEnumerable<StudentProfile>>(view.Model);
+        Assert.Single(model);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Details_NullId_ReturnsNotFound()
+    {
+        var ctx = DbFactory.Create();
+        var um = RoleHelper.CreateWithUserId("admin-id");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Admin", "admin-id");
+        Assert.IsType<NotFoundResult>(await ctrl.Details(null));
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Details_UnknownId_ReturnsNotFound()
+    {
+        var ctx = DbFactory.Create();
+        var um = RoleHelper.CreateWithUserId("admin-id");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Admin", "admin-id");
+        Assert.IsType<NotFoundResult>(await ctrl.Details(999));
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Details_AsAdmin_ValidId_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var um = RoleHelper.CreateWithUserId("admin-id");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Admin", "admin-id");
+
+        var result = await ctrl.Details(student.Id);
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Details_AsStudent_OwnProfile_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var um = RoleHelper.CreateWithUserId(student.IdentityUserId);
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Student", student.IdentityUserId);
+
+        var result = await ctrl.Details(student.Id);
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Edit_Get_NullId_ReturnsNotFound()
+    {
+        var ctx = DbFactory.Create();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        Assert.IsType<NotFoundResult>(await ctrl.Edit(null));
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Edit_Get_ValidId_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        Assert.IsType<ViewResult>(await ctrl.Edit(student.Id));
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Edit_Post_IdMismatch_ReturnsNotFound()
+    {
+        var ctx = DbFactory.Create();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        Assert.IsType<NotFoundResult>(await ctrl.Edit(1, new StudentProfile { Id = 999 }));
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Edit_Post_Valid_Redirects()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create()) { TempData = DbFactory.FakeTempData() };
+        student.Name = "Updated Name";
+        Assert.Equal("Index", Assert.IsType<RedirectToActionResult>(await ctrl.Edit(student.Id, student)).ActionName);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Delete_Get_NullId_ReturnsNotFound()
+    {
+        var ctx = DbFactory.Create();
+        Assert.IsType<NotFoundResult>(await new StudentsController(ctx, MockUserManager.Create()).Delete(null));
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Delete_Get_ValidId_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        Assert.IsType<ViewResult>(await new StudentsController(ctx, MockUserManager.Create()).Delete(student.Id));
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task DeleteConfirmed_Deletes_AndRedirects()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create()) { TempData = DbFactory.FakeTempData() };
+        await ctrl.DeleteConfirmed(student.Id);
+        Assert.Equal(0, await ctx.StudentProfiles.CountAsync());
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task DeleteConfirmed_UnknownId_ReturnsNotFound()
+    {
+        var ctx = DbFactory.Create();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create()) { TempData = DbFactory.FakeTempData() };
+        Assert.IsType<NotFoundResult>(await ctrl.DeleteConfirmed(999));
+        await ctx.DisposeAsync();
+    }
+}
+
+public class AssignmentsControllerBranchTests
+{
+    [Fact]
+    public async Task Index_AsFaculty_WithProfile_ReturnsOnlyTheirAssignments()
+    {
+        var (ctx, branch, course1) = await DbFactory.WithCourseAsync();
+        var course2 = new Course { Name = "C2", BranchId = branch.Id, StartDate = DateTime.Today, EndDate = DateTime.Today.AddYears(1) };
+        ctx.Courses.Add(course2);
+        await ctx.SaveChangesAsync();
+
+        var faculty = new FacultyProfile { IdentityUserId = "fac-id", Name = "Dr F", Email = "f@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+        ctx.FacultyCourseAssignments.Add(new FacultyCourseAssignment { FacultyProfileId = faculty.Id, CourseId = course1.Id });
+        await ctx.SaveChangesAsync();
+
+        ctx.Assignments.AddRange(
+            new Assignment { CourseId = course1.Id, Title = "A1", MaxScore = 100, DueDate = DateTime.Today },
+            new Assignment { CourseId = course2.Id, Title = "A2", MaxScore = 100, DueDate = DateTime.Today }
+        );
+        await ctx.SaveChangesAsync();
+
+        var um = RoleHelper.CreateWithUserId("fac-id");
+        var ctrl = new AssignmentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-id");
+
+        var result = await ctrl.Index(null);
+        var model = Assert.IsAssignableFrom<IEnumerable<Assignment>>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Single(model);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Edit_Post_InvalidModel_ReturnsView()
+    {
+        var (ctx, _, course) = await DbFactory.WithCourseAsync();
+        var a = new Assignment { CourseId = course.Id, Title = "CA1", MaxScore = 100, DueDate = DateTime.Today };
+        ctx.Assignments.Add(a); await ctx.SaveChangesAsync();
+        var ctrl = new AssignmentsController(ctx, MockUserManager.Create());
+        ctrl.ModelState.AddModelError("Title", "Required");
+        Assert.IsType<ViewResult>(await ctrl.Edit(a.Id, a));
+        await ctx.DisposeAsync();
+    }
+}
+
+public class ExamsControllerBranchTests
+{
+    [Fact]
+    public async Task Index_AsFaculty_ReturnsOnlyTheirExams()
+    {
+        var (ctx, branch, course1) = await DbFactory.WithCourseAsync();
+        var course2 = new Course { Name = "C2", BranchId = branch.Id, StartDate = DateTime.Today, EndDate = DateTime.Today.AddYears(1) };
+        ctx.Courses.Add(course2);
+        await ctx.SaveChangesAsync();
+
+        var faculty = new FacultyProfile { IdentityUserId = "fac-id", Name = "Dr F", Email = "f@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+        ctx.FacultyCourseAssignments.Add(new FacultyCourseAssignment { FacultyProfileId = faculty.Id, CourseId = course1.Id });
+        await ctx.SaveChangesAsync();
+
+        ctx.Exams.AddRange(
+            new Exam { CourseId = course1.Id, Title = "E1", Date = DateTime.Today, MaxScore = 100 },
+            new Exam { CourseId = course2.Id, Title = "E2", Date = DateTime.Today, MaxScore = 100 }
+        );
+        await ctx.SaveChangesAsync();
+
+        var um = RoleHelper.CreateWithUserId("fac-id");
+        var ctrl = new ExamsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-id");
+
+        var result = await ctrl.Index(null);
+        var model = Assert.IsAssignableFrom<IEnumerable<Exam>>(Assert.IsType<ViewResult>(result).Model);
+        Assert.Single(model);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Edit_Post_InvalidModel_ReturnsView()
+    {
+        var (ctx, _, course) = await DbFactory.WithCourseAsync();
+        var e = new Exam { CourseId = course.Id, Title = "E1", Date = DateTime.Today, MaxScore = 100 };
+        ctx.Exams.Add(e); await ctx.SaveChangesAsync();
+        var ctrl = new ExamsController(ctx, MockUserManager.Create());
+        ctrl.ModelState.AddModelError("Title", "Required");
+        Assert.IsType<ViewResult>(await ctrl.Edit(e.Id, e));
+        await ctx.DisposeAsync();
+    }
+}
+
+public class AttendanceControllerBranchTests
+{
+    [Fact]
+    public async Task Index_AsFaculty_WithCourse_ReturnsRecords()
+    {
+        var (ctx, course, _, enrolment) = await DbFactory.WithEnrolmentAsync();
+        var faculty = new FacultyProfile { IdentityUserId = "fac-id", Name = "Dr F", Email = "f@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+        ctx.FacultyCourseAssignments.Add(new FacultyCourseAssignment { FacultyProfileId = faculty.Id, CourseId = course.Id });
+        await ctx.SaveChangesAsync();
+
+        var um = RoleHelper.CreateWithUserId("fac-id");
+        var ctrl = new AttendanceController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-id");
+
+        var result = await ctrl.Index(enrolment.Id);
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Edit_Post_InvalidModel_ReturnsView()
+    {
+        var (ctx, _, _, enrolment) = await DbFactory.WithEnrolmentAsync();
+        var r = new AttendanceRecord { CourseEnrolmentId = enrolment.Id, WeekNumber = 1, SessionDate = DateTime.Today, Present = true };
+        ctx.AttendanceRecords.Add(r); await ctx.SaveChangesAsync();
+        var ctrl = new AttendanceController(ctx, MockUserManager.Create());
+        ctrl.ModelState.AddModelError("WeekNumber", "Required");
+        Assert.IsType<ViewResult>(await ctrl.Edit(r.Id, r));
+        await ctx.DisposeAsync();
+    }
+}
+
+public class ExamResultsBranchTests
+{
+    [Fact]
+    public async Task Edit_Post_ScoreExceedsMax_ReturnsViewWithError()
+    {
+        var (ctx, course, student, _) = await DbFactory.WithEnrolmentAsync();
+        var e = new Exam { CourseId = course.Id, Title = "E1", Date = DateTime.Today, MaxScore = 100 };
+        ctx.Exams.Add(e); await ctx.SaveChangesAsync();
+        var r = new ExamResult { ExamId = e.Id, StudentProfileId = student.Id, Score = 70, Grade = "B2" };
+        ctx.ExamResults.Add(r); await ctx.SaveChangesAsync();
+        var ctrl = new ExamResultsController(ctx);
+        r.Score = 150;
+        var result = await ctrl.Edit(r.Id, r);
+        Assert.IsType<ViewResult>(result);
+        Assert.False(ctrl.ModelState.IsValid);
+        await ctx.DisposeAsync();
+    }
+}
+
+public class AssignmentResultsBranchTests
+{
+    [Fact]
+    public async Task Edit_Post_ScoreExceedsMax_ReturnsViewWithError()
+    {
+        var (ctx, course, student, _) = await DbFactory.WithEnrolmentAsync();
+        var a = new Assignment { CourseId = course.Id, Title = "CA1", MaxScore = 100, DueDate = DateTime.Today };
+        ctx.Assignments.Add(a); await ctx.SaveChangesAsync();
+        var r = new AssignmentResult { AssignmentId = a.Id, StudentProfileId = student.Id, Score = 70 };
+        ctx.AssignmentResults.Add(r); await ctx.SaveChangesAsync();
+        var ctrl = new AssignmentResultsController(ctx, MockUserManager.Create());
+        r.Score = 150;
+        var result = await ctrl.Edit(r.Id, r);
+        Assert.IsType<ViewResult>(result);
+        Assert.False(ctrl.ModelState.IsValid);
+        await ctx.DisposeAsync();
     }
 }

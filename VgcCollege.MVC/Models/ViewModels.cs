@@ -25,9 +25,3 @@ public class StudentDashboardViewModel
     public string StudentNumber { get; set; } = "";
     public List<CourseEnrolment> MyEnrolments { get; set; } = new();
 }
-
-public class ErrorViewModel
-{
-    public string? RequestId { get; set; }
-    public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
-}

@@ -6,9 +6,15 @@ namespace VgcCollege.MVC.Controllers;
 
 public class HomeController : Controller
 {
-    public IActionResult Index() => RedirectToAction("Index", "Dashboard");
+    public IActionResult Index()
+    {
+        return RedirectToAction("Index", "Dashboard");
+    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
-        => View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    {
+        var requestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        return View(new ErrorViewModel { RequestId = requestId });
+    }
 }

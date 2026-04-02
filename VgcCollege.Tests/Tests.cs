@@ -7,6 +7,7 @@ using Moq;
 using VgcCollege.Domain;
 using VgcCollege.MVC.Controllers;
 using VgcCollege.MVC.Data;
+using VgcCollege.MVC.Models;
 
 namespace VgcCollege.Tests;
 
@@ -2379,5 +2380,22 @@ public class AssignmentResultsBranchTests
         Assert.IsType<ViewResult>(result);
         Assert.False(ctrl.ModelState.IsValid);
         await ctx.DisposeAsync();
+    }
+}
+
+public class ErrorViewModelTests
+{
+    [Fact]
+    public void ShowRequestId_WhenRequestIdIsNull_ReturnsFalse()
+    {
+        var vm = new ErrorViewModel { RequestId = null };
+        Assert.False(vm.ShowRequestId);
+    }
+
+    [Fact]
+    public void ShowRequestId_WhenRequestIdHasValue_ReturnsTrue()
+    {
+        var vm = new ErrorViewModel { RequestId = "abc-123" };
+        Assert.True(vm.ShowRequestId);
     }
 }

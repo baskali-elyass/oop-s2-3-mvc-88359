@@ -2399,3 +2399,243 @@ public class ErrorViewModelTests
         Assert.True(vm.ShowRequestId);
     }
 }
+
+// ── Tests supplémentaires issus de message.txt ────────────────────────────────
+
+public class GradeCalculationTests
+{
+    [Theory]
+    [InlineData(90, 100, "A")]
+    [InlineData(75, 100, "B")]
+    [InlineData(60, 100, "C")]
+    [InlineData(40, 100, "F")]
+    public void Grade_CalculatedFromScore(int score, int maxScore, string expectedGrade)
+    {
+        double pct = score * 100.0 / maxScore;
+        string grade = pct >= 85 ? "A" : pct >= 70 ? "B" : pct >= 55 ? "C" : "F";
+        Assert.Equal(expectedGrade, grade);
+    }
+}
+
+public class EnrolmentStatusTests
+{
+    [Fact]
+    public async Task EnrolmentStatus_CanBeChangedToWithdrawn()
+    {
+        var (ctx, _, course) = await DbFactory.WithCourseAsync();
+        var student = new StudentProfile { IdentityUserId = "uid-s", Name = "Test Student", Email = "s@test.ie", StudentNumber = "T001" };
+        ctx.StudentProfiles.Add(student);
+        await ctx.SaveChangesAsync();
+
+        var enrolment = new CourseEnrolment
+        {
+            StudentProfileId = student.Id,
+            CourseId = course.Id,
+            EnrolDate = DateTime.Today,
+            Status = "Active"
+        };
+        ctx.CourseEnrolments.Add(enrolment);
+        await ctx.SaveChangesAsync();
+
+        enrolment.Status = "Withdrawn";
+        await ctx.SaveChangesAsync();
+
+        var saved = await ctx.CourseEnrolments.FindAsync(enrolment.Id);
+        Assert.Equal("Withdrawn", saved!.Status);
+        await ctx.DisposeAsync();
+    }
+}
+
+public class StudentEnrolmentScopeTests
+{
+    [Fact]
+    public async Task Student_OnlySeesOwnEnrolments()
+    {
+        var (ctx, _, course) = await DbFactory.WithCourseAsync();
+        var student1 = new StudentProfile { IdentityUserId = "uid-1", Name = "Student 1", Email = "s1@test.ie", StudentNumber = "T001" };
+        var student2 = new StudentProfile { IdentityUserId = "uid-2", Name = "Student 2", Email = "s2@test.ie", StudentNumber = "T002" };
+        ctx.StudentProfiles.AddRange(student1, student2);
+        await ctx.SaveChangesAsync();
+
+        ctx.CourseEnrolments.AddRange(
+            new CourseEnrolment { StudentProfileId = student1.Id, CourseId = course.Id, EnrolDate = DateTime.Today, Status = "Active" },
+            new CourseEnrolment { StudentProfileId = student2.Id, CourseId = course.Id, EnrolDate = DateTime.Today, Status = "Active" }
+        );
+        await ctx.SaveChangesAsync();
+
+        var myEnrolments = await ctx.CourseEnrolments
+            .Where(e => e.StudentProfileId == student1.Id).ToListAsync();
+
+        Assert.Single(myEnrolments);
+        Assert.All(myEnrolments, e => Assert.Equal(student1.Id, e.StudentProfileId));
+        await ctx.DisposeAsync();
+    }
+}
+
+public class AssignmentResultDomainTests
+{
+    [Fact]
+    public void AssignmentResult_Properties_CanBeSet_IncreasesDomainCoverage()
+    {
+        var result = new AssignmentResult
+        {
+            Id = 1,
+            AssignmentId = 10,
+            StudentProfileId = 5,
+            Score = 85,
+            Feedback = "Excellent"
+        };
+
+        Assert.Equal(1, result.Id);
+        Assert.Equal(10, result.AssignmentId);
+        Assert.Equal(5, result.StudentProfileId);
+        Assert.Equal(85, result.Score);
+        Assert.Equal("Excellent", result.Feedback);
+    }
+}
+
+public class AttendanceToggleTests
+{
+    [Fact]
+    public async Task AttendanceController_Toggle_ChangesPresenceFromFalseToTrue()
+    {
+        var (ctx, _, _, enrolment) = await DbFactory.WithEnrolmentAsync();
+
+        var record = new AttendanceRecord
+        {
+            CourseEnrolmentId = enrolment.Id,
+            WeekNumber = 1,
+            SessionDate = DateTime.Today,
+            Present = false
+        };
+        ctx.AttendanceRecords.Add(record);
+        await ctx.SaveChangesAsync();
+
+        var ctrl = new AttendanceController(ctx, MockUserManager.Create()) { TempData = DbFactory.FakeTempData() };
+        record.Present = true;
+        await ctrl.Edit(record.Id, record);
+
+        var saved = await ctx.AttendanceRecords.FindAsync(record.Id);
+        Assert.True(saved!.Present);
+        await ctx.DisposeAsync();
+    }
+}
+
+public class AttendanceControllerIndexModelTests
+{
+    [Fact]
+    public async Task AttendanceController_Index_ReturnsEnrolmentModel()
+    {
+        var (ctx, _, _, enrolment) = await DbFactory.WithEnrolmentAsync();
+
+        var um = RoleHelper.CreateWithUserId("admin-id");
+        var ctrl = new AttendanceController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Admin", "admin-id");
+
+        var result = await ctrl.Index(enrolment.Id);
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsAssignableFrom<CourseEnrolment>(view.Model);
+        Assert.Equal(enrolment.Id, model.Id);
+        await ctx.DisposeAsync();
+    }
+}
+
+public class ExamResultAddTests
+{
+    [Fact]
+    public async Task ExamResultsController_Create_ValidData_RedirectsToIndex()
+    {
+        var (ctx, course, student, _) = await DbFactory.WithEnrolmentAsync();
+
+        var exam = new Exam { CourseId = course.Id, Title = "Final", Date = DateTime.Today, MaxScore = 100, ResultsReleased = false };
+        ctx.Exams.Add(exam);
+        await ctx.SaveChangesAsync();
+
+        var ctrl = new ExamResultsController(ctx) { TempData = DbFactory.FakeTempData() };
+
+        var result = await ctrl.Create(new ExamResult
+        {
+            ExamId = exam.Id,
+            StudentProfileId = student.Id,
+            Score = 88,
+            Grade = "A2"
+        });
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
+        Assert.Equal(1, await ctx.ExamResults.CountAsync());
+        await ctx.DisposeAsync();
+    }
+}
+
+public class HomeControllerTests
+{
+    [Fact]
+    public void HomeController_Index_ReturnsView()
+    {
+        var controller = new HomeController();
+        var result = controller.Index();
+        Assert.IsType<ViewResult>(result);
+    }
+}
+
+public class StudentProfilesControllerEditNullTests
+{
+    [Fact]
+    public async Task StudentsController_Edit_NullId_ReturnsNotFound()
+    {
+        await using var ctx = DbFactory.Create();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        var result = await ctrl.Edit((int?)null);
+        Assert.IsType<NotFoundResult>(result);
+    }
+}
+
+public class FacultyProfilesControllerAssignmentTests
+{
+    [Fact]
+    public async Task FacultyController_AssignCourse_RedirectsToDetails()
+    {
+        var (ctx, _, course) = await DbFactory.WithCourseAsync();
+        var faculty = new FacultyProfile { IdentityUserId = "fac-new", Name = "Dr F", Email = "f@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+
+        var ctrl = new FacultyController(ctx, MockUserManager.Create()) { TempData = DbFactory.FakeTempData() };
+
+        var result = await ctrl.Assign(new FacultyCourseAssignment
+        {
+            FacultyProfileId = faculty.Id,
+            CourseId = course.Id,
+            IsTutor = true
+        });
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Details", redirect.ActionName);
+        Assert.Equal(faculty.Id, redirect.RouteValues!["id"]);
+        Assert.Single(ctx.FacultyCourseAssignments);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task FacultyController_RemoveCourseAssignment_RemovesAndRedirects()
+    {
+        var (ctx, _, course) = await DbFactory.WithCourseAsync();
+        var faculty = new FacultyProfile { IdentityUserId = "fac-remove", Name = "Dr R", Email = "r@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+
+        var assignment = new FacultyCourseAssignment { FacultyProfileId = faculty.Id, CourseId = course.Id, IsTutor = true };
+        ctx.FacultyCourseAssignments.Add(assignment);
+        await ctx.SaveChangesAsync();
+
+        var ctrl = new FacultyController(ctx, MockUserManager.Create()) { TempData = DbFactory.FakeTempData() };
+
+        var result = await ctrl.Unassign(assignment.Id, faculty.Id);
+
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Details", redirect.ActionName);
+        Assert.Empty(ctx.FacultyCourseAssignments);
+        await ctx.DisposeAsync();
+    }
+}

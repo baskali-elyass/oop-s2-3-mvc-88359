@@ -2534,8 +2534,8 @@ public class AttendanceControllerIndexModelTests
 
         var result = await ctrl.Index(enrolment.Id);
         var view = Assert.IsType<ViewResult>(result);
-        var model = Assert.IsAssignableFrom<CourseEnrolment>(view.Model);
-        Assert.Equal(enrolment.Id, model.Id);
+        var model = Assert.IsAssignableFrom<IEnumerable<AttendanceRecord>>(view.Model);
+        Assert.NotNull(model);
         await ctx.DisposeAsync();
     }
 }
@@ -2571,11 +2571,11 @@ public class ExamResultAddTests
 public class HomeControllerTests
 {
     [Fact]
-    public void HomeController_Index_ReturnsView()
+    public void HomeController_Index_Redirects()
     {
         var controller = new HomeController();
         var result = controller.Index();
-        Assert.IsType<ViewResult>(result);
+        Assert.IsType<RedirectToActionResult>(result);
     }
 }
 

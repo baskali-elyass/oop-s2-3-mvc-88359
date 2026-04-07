@@ -2639,3 +2639,388 @@ public class FacultyProfilesControllerAssignmentTests
         await ctx.DisposeAsync();
     }
 }
+
+public class HomeControllerErrorTests
+{
+    [Fact]
+    public void HomeController_Error_WithTraceIdentifier_ReturnsViewWithRequestId()
+    {
+        var controller = new HomeController();
+        var httpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext();
+        httpContext.TraceIdentifier = "trace-id-123";
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = httpContext
+        };
+
+        var result = controller.Error();
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<ErrorViewModel>(view.Model);
+        Assert.Equal("trace-id-123", model.RequestId);
+    }
+
+    [Fact]
+    public void HomeController_Error_RequestId_ShowRequestId_IsTrue()
+    {
+        var controller = new HomeController();
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new Microsoft.AspNetCore.Http.DefaultHttpContext()
+        };
+
+        var result = controller.Error();
+
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<ErrorViewModel>(view.Model);
+        Assert.True(model.ShowRequestId);
+    }
+}
+
+public class BranchesControllerConcurrencyTests
+{
+    [Fact]
+    public async Task BranchesController_Edit_Post_Valid_UpdatesBranch()
+    {
+        await using var ctx = DbFactory.Create();
+        var branch = new Branch { Name = "Original", Address = "Addr" };
+        ctx.Branches.Add(branch);
+        await ctx.SaveChangesAsync();
+
+        var ctrl = new BranchesController(ctx) { TempData = DbFactory.FakeTempData() };
+        branch.Name = "Updated";
+
+        var result = await ctrl.Edit(branch.Id, branch);
+
+        Assert.Equal("Index", Assert.IsType<RedirectToActionResult>(result).ActionName);
+        var saved = await ctx.Branches.FindAsync(branch.Id);
+        Assert.Equal("Updated", saved!.Name);
+    }
+}
+
+public class StudentsControllerConcurrencyTests
+{
+    [Fact]
+    public async Task StudentsController_Edit_Post_Valid_UpdatesStudent()
+    {
+        await using var ctx = DbFactory.Create();
+        var student = new StudentProfile { IdentityUserId = "uid-c", Name = "Original", Email = "c@test.ie", StudentNumber = "C001" };
+        ctx.StudentProfiles.Add(student);
+        await ctx.SaveChangesAsync();
+
+        var ctrl = new StudentsController(ctx, MockUserManager.Create()) { TempData = DbFactory.FakeTempData() };
+        student.Name = "Updated";
+
+        var result = await ctrl.Edit(student.Id, student);
+
+        Assert.Equal("Index", Assert.IsType<RedirectToActionResult>(result).ActionName);
+        var saved = await ctx.StudentProfiles.FindAsync(student.Id);
+        Assert.Equal("Updated", saved!.Name);
+    }
+}
+// ── Tests VgcCollege.Domain ───────────────────────────────────────────────────
+
+public class BranchEntityTests
+{
+    [Fact]
+    public void Branch_DefaultValues_AreCorrect()
+    {
+        var b = new Branch();
+        Assert.Equal(0, b.Id);
+        Assert.Equal(string.Empty, b.Name);
+        Assert.Equal(string.Empty, b.Address);
+        Assert.NotNull(b.Courses);
+        Assert.Empty(b.Courses);
+    }
+
+    [Fact]
+    public void Branch_Properties_CanBeSet()
+    {
+        var b = new Branch { Id = 1, Name = "Dublin Campus", Address = "1 O'Connell St" };
+        Assert.Equal(1, b.Id);
+        Assert.Equal("Dublin Campus", b.Name);
+        Assert.Equal("1 O'Connell St", b.Address);
+    }
+
+    [Fact]
+    public void Branch_Courses_CanBePopulated()
+    {
+        var b = new Branch();
+        b.Courses.Add(new Course { Name = "Software Dev" });
+        Assert.Single(b.Courses);
+    }
+}
+
+public class CourseEntityTests
+{
+    [Fact]
+    public void Course_DefaultValues_AreCorrect()
+    {
+        var c = new Course();
+        Assert.Equal(0, c.Id);
+        Assert.Equal(string.Empty, c.Name);
+        Assert.Equal(0, c.BranchId);
+        Assert.Empty(c.Enrolments);
+        Assert.Empty(c.FacultyAssignments);
+        Assert.Empty(c.Assignments);
+        Assert.Empty(c.Exams);
+    }
+
+    [Fact]
+    public void Course_Properties_CanBeSet()
+    {
+        var start = DateTime.Today;
+        var end = DateTime.Today.AddYears(1);
+        var c = new Course { Id = 5, Name = "Web Dev", BranchId = 2, StartDate = start, EndDate = end };
+        Assert.Equal(5, c.Id);
+        Assert.Equal("Web Dev", c.Name);
+        Assert.Equal(2, c.BranchId);
+        Assert.Equal(start, c.StartDate);
+        Assert.Equal(end, c.EndDate);
+    }
+}
+
+public class StudentProfileEntityTests
+{
+    [Fact]
+    public void StudentProfile_DefaultValues_AreCorrect()
+    {
+        var s = new StudentProfile();
+        Assert.Equal(0, s.Id);
+        Assert.Equal(string.Empty, s.IdentityUserId);
+        Assert.Equal(string.Empty, s.Name);
+        Assert.Equal(string.Empty, s.Email);
+        Assert.Null(s.Phone);
+        Assert.Null(s.Address);
+        Assert.Null(s.DateOfBirth);
+        Assert.Equal(string.Empty, s.StudentNumber);
+        Assert.Empty(s.Enrolments);
+        Assert.Empty(s.AssignmentResults);
+        Assert.Empty(s.ExamResults);
+    }
+
+    [Fact]
+    public void StudentProfile_OptionalProperties_CanBeSet()
+    {
+        var dob = new DateTime(2000, 1, 15);
+        var s = new StudentProfile { Phone = "0871234567", Address = "10 Main St", DateOfBirth = dob };
+        Assert.Equal("0871234567", s.Phone);
+        Assert.Equal("10 Main St", s.Address);
+        Assert.Equal(dob, s.DateOfBirth);
+    }
+}
+
+public class FacultyProfileEntityTests
+{
+    [Fact]
+    public void FacultyProfile_DefaultValues_AreCorrect()
+    {
+        var f = new FacultyProfile();
+        Assert.Equal(0, f.Id);
+        Assert.Equal(string.Empty, f.IdentityUserId);
+        Assert.Equal(string.Empty, f.Name);
+        Assert.Equal(string.Empty, f.Email);
+        Assert.Null(f.Phone);
+        Assert.Empty(f.CourseAssignments);
+    }
+
+    [Fact]
+    public void FacultyProfile_Phone_CanBeSet()
+    {
+        var f = new FacultyProfile { Phone = "0861234567" };
+        Assert.Equal("0861234567", f.Phone);
+    }
+}
+
+public class FacultyCourseAssignmentEntityTests
+{
+    [Fact]
+    public void FacultyCourseAssignment_DefaultIsTutor_IsFalse()
+    {
+        var a = new FacultyCourseAssignment();
+        Assert.False(a.IsTutor);
+        Assert.Equal(0, a.FacultyProfileId);
+        Assert.Equal(0, a.CourseId);
+    }
+
+    [Fact]
+    public void FacultyCourseAssignment_IsTutor_CanBeSetTrue()
+    {
+        var a = new FacultyCourseAssignment { IsTutor = true, FacultyProfileId = 1, CourseId = 2 };
+        Assert.True(a.IsTutor);
+        Assert.Equal(1, a.FacultyProfileId);
+        Assert.Equal(2, a.CourseId);
+    }
+}
+
+public class CourseEnrolmentEntityTests
+{
+    [Fact]
+    public void CourseEnrolment_DefaultStatus_IsActive()
+    {
+        var e = new CourseEnrolment();
+        Assert.Equal("Active", e.Status);
+        Assert.Empty(e.AttendanceRecords);
+    }
+
+    [Fact]
+    public void CourseEnrolment_Properties_CanBeSet()
+    {
+        var date = DateTime.Today;
+        var e = new CourseEnrolment
+        {
+            Id = 3,
+            StudentProfileId = 10,
+            CourseId = 5,
+            EnrolDate = date,
+            Status = "Withdrawn"
+        };
+        Assert.Equal(3, e.Id);
+        Assert.Equal(10, e.StudentProfileId);
+        Assert.Equal(5, e.CourseId);
+        Assert.Equal(date, e.EnrolDate);
+        Assert.Equal("Withdrawn", e.Status);
+    }
+}
+
+public class AttendanceRecordEntityTests
+{
+    [Fact]
+    public void AttendanceRecord_DefaultValues_AreCorrect()
+    {
+        var r = new AttendanceRecord();
+        Assert.Equal(0, r.Id);
+        Assert.Equal(0, r.CourseEnrolmentId);
+        Assert.Equal(0, r.WeekNumber);
+        Assert.False(r.Present);
+        Assert.Null(r.Notes);
+    }
+
+    [Fact]
+    public void AttendanceRecord_Properties_CanBeSet()
+    {
+        var date = DateTime.Today;
+        var r = new AttendanceRecord
+        {
+            Id = 1,
+            CourseEnrolmentId = 2,
+            WeekNumber = 5,
+            SessionDate = date,
+            Present = true,
+            Notes = "Late arrival"
+        };
+        Assert.Equal(1, r.Id);
+        Assert.Equal(2, r.CourseEnrolmentId);
+        Assert.Equal(5, r.WeekNumber);
+        Assert.Equal(date, r.SessionDate);
+        Assert.True(r.Present);
+        Assert.Equal("Late arrival", r.Notes);
+    }
+}
+
+public class AssignmentEntityTests
+{
+    [Fact]
+    public void Assignment_DefaultValues_AreCorrect()
+    {
+        var a = new Assignment();
+        Assert.Equal(0, a.Id);
+        Assert.Equal(string.Empty, a.Title);
+        Assert.Equal(0, a.MaxScore);
+        Assert.Empty(a.Results);
+    }
+
+    [Fact]
+    public void Assignment_Properties_CanBeSet()
+    {
+        var due = DateTime.Today.AddDays(7);
+        var a = new Assignment { Id = 1, CourseId = 3, Title = "CA1", MaxScore = 100, DueDate = due };
+        Assert.Equal(1, a.Id);
+        Assert.Equal(3, a.CourseId);
+        Assert.Equal("CA1", a.Title);
+        Assert.Equal(100, a.MaxScore);
+        Assert.Equal(due, a.DueDate);
+    }
+}
+
+public class AssignmentResultEntityTests
+{
+    [Fact]
+    public void AssignmentResult_DefaultValues_AreCorrect()
+    {
+        var r = new AssignmentResult();
+        Assert.Equal(0, r.Id);
+        Assert.Equal(0, r.AssignmentId);
+        Assert.Equal(0, r.StudentProfileId);
+        Assert.Equal(0, r.Score);
+        Assert.Null(r.Feedback);
+    }
+
+    [Fact]
+    public void AssignmentResult_SubmittedAt_DefaultIsRecentUtc()
+    {
+        var before = DateTime.UtcNow.AddSeconds(-1);
+        var r = new AssignmentResult();
+        var after = DateTime.UtcNow.AddSeconds(1);
+        Assert.InRange(r.SubmittedAt, before, after);
+    }
+
+    [Fact]
+    public void AssignmentResult_Properties_CanBeSet()
+    {
+        var r = new AssignmentResult { Id = 1, AssignmentId = 2, StudentProfileId = 3, Score = 87.5, Feedback = "Well done" };
+        Assert.Equal(87.5, r.Score);
+        Assert.Equal("Well done", r.Feedback);
+    }
+}
+
+public class ExamEntityTests
+{
+    [Fact]
+    public void Exam_DefaultResultsReleased_IsFalse()
+    {
+        var e = new Exam();
+        Assert.False(e.ResultsReleased);
+        Assert.Equal(string.Empty, e.Title);
+        Assert.Equal(0, e.MaxScore);
+        Assert.Empty(e.Results);
+    }
+
+    [Fact]
+    public void Exam_Properties_CanBeSet()
+    {
+        var date = DateTime.Today;
+        var e = new Exam { Id = 1, CourseId = 2, Title = "Final Exam", Date = date, MaxScore = 100, ResultsReleased = true };
+        Assert.Equal(1, e.Id);
+        Assert.Equal(2, e.CourseId);
+        Assert.Equal("Final Exam", e.Title);
+        Assert.Equal(date, e.Date);
+        Assert.Equal(100, e.MaxScore);
+        Assert.True(e.ResultsReleased);
+    }
+}
+
+public class ExamResultEntityTests
+{
+    [Fact]
+    public void ExamResult_DefaultValues_AreCorrect()
+    {
+        var r = new ExamResult();
+        Assert.Equal(0, r.Id);
+        Assert.Equal(0, r.ExamId);
+        Assert.Equal(0, r.StudentProfileId);
+        Assert.Equal(0, r.Score);
+        Assert.Null(r.Grade);
+    }
+
+    [Fact]
+    public void ExamResult_Properties_CanBeSet()
+    {
+        var r = new ExamResult { Id = 1, ExamId = 5, StudentProfileId = 3, Score = 92.0, Grade = "A1" };
+        Assert.Equal(1, r.Id);
+        Assert.Equal(5, r.ExamId);
+        Assert.Equal(3, r.StudentProfileId);
+        Assert.Equal(92.0, r.Score);
+        Assert.Equal("A1", r.Grade);
+    }
+}

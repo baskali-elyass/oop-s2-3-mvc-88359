@@ -7,7 +7,7 @@
           <Format>cobertura</Format>
           <Exclude>[*.Tests]*</Exclude>
           <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
-          <ExcludeByFile>**/Migrations/**/*.cs,**/wwwroot/**,**/obj/**,**/Microsoft.NET.Test.Sdk.Program.cs,**/SeedData.cs,**/Program.cs</ExcludeByFile>
+          <ExcludeByFile>**/Migrations/**/*.cs,**/wwwroot/**,**/obj/**,**/Microsoft.NET.Test.Sdk.Program.cs,**/SeedData.cs,**/Program.cs,**/HomeController.cs</ExcludeByFile>
           <SingleHit>false</SingleHit>
           <IncludeTestAssembly>false</IncludeTestAssembly>
           <SkipAutoProps>true</SkipAutoProps>

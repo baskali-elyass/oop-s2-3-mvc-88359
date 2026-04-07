@@ -11,8 +11,6 @@ using VgcCollege.MVC.Models;
 
 namespace VgcCollege.Tests;
 
-
-
 file static class DbFactory
 {
     public static ApplicationDbContext Create() =>
@@ -2400,8 +2398,6 @@ public class ErrorViewModelTests
     }
 }
 
-// ── Tests supplémentaires issus de message.txt ────────────────────────────────
-
 public class GradeCalculationTests
 {
     [Theory]
@@ -2718,7 +2714,6 @@ public class StudentsControllerConcurrencyTests
         Assert.Equal("Updated", saved!.Name);
     }
 }
-// ── Tests VgcCollege.Domain ───────────────────────────────────────────────────
 
 public class BranchEntityTests
 {
@@ -3022,5 +3017,195 @@ public class ExamResultEntityTests
         Assert.Equal(3, r.StudentProfileId);
         Assert.Equal(92.0, r.Score);
         Assert.Equal("A1", r.Grade);
+    }
+}
+
+public class StudentsControllerExtraTests
+{
+    [Fact]
+    public void StudentsController_Create_Get_ReturnsView()
+    {
+        using var ctx = DbFactory.Create();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        Assert.IsType<ViewResult>(ctrl.Create());
+    }
+
+    [Fact]
+    public async Task StudentsController_Create_Post_InvalidModel_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        ctrl.ModelState.AddModelError("Name", "Required");
+        var result = await ctrl.Create(new StudentProfile());
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Create_Post_DuplicateStudentNumber_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        var duplicate = new StudentProfile
+        {
+            Name = "New",
+            Email = "new@test.ie",
+            StudentNumber = student.StudentNumber
+        };
+        var result = await ctrl.Create(duplicate);
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Create_Post_DuplicateEmail_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        var duplicate = new StudentProfile
+        {
+            Name = "New",
+            Email = student.Email,
+            StudentNumber = "UNIQUE-99"
+        };
+        var result = await ctrl.Create(duplicate);
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Index_AsFaculty_WithoutProfile_ReturnsForbid()
+    {
+        await using var ctx = DbFactory.Create();
+        var um = RoleHelper.CreateWithUserId("fac-unknown");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-unknown");
+
+        var result = await ctrl.Index();
+        Assert.IsType<ForbidResult>(result);
+    }
+
+    [Fact]
+    public async Task StudentsController_Index_AsStudent_WithoutProfile_ReturnsForbid()
+    {
+        await using var ctx = DbFactory.Create();
+        var um = RoleHelper.CreateWithUserId("stu-unknown");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Student", "stu-unknown");
+
+        var result = await ctrl.Index();
+        Assert.IsType<ForbidResult>(result);
+    }
+
+    [Fact]
+    public async Task StudentsController_Details_AsStudent_OtherProfile_ReturnsForbid()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var um = RoleHelper.CreateWithUserId("other-uid");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Student", "other-uid");
+
+        var result = await ctrl.Details(student.Id);
+        Assert.IsType<ForbidResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Details_AsFaculty_WithoutProfile_ReturnsForbid()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var um = RoleHelper.CreateWithUserId("fac-unknown");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-unknown");
+
+        var result = await ctrl.Details(student.Id);
+        Assert.IsType<ForbidResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Details_AsFaculty_StudentNotInCourses_ReturnsForbid()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var faculty = new FacultyProfile { IdentityUserId = "fac-other", Name = "Dr Other", Email = "other@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+
+        var um = RoleHelper.CreateWithUserId("fac-other");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-other");
+
+        var result = await ctrl.Details(student.Id);
+        Assert.IsType<ForbidResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Details_AsFaculty_StudentInCourses_ReturnsView()
+    {
+        var (ctx, course, student, _) = await DbFactory.WithEnrolmentAsync();
+        var faculty = new FacultyProfile { IdentityUserId = "fac-yes", Name = "Dr Yes", Email = "yes@t.ie" };
+        ctx.FacultyProfiles.Add(faculty);
+        await ctx.SaveChangesAsync();
+        ctx.FacultyCourseAssignments.Add(new FacultyCourseAssignment { FacultyProfileId = faculty.Id, CourseId = course.Id });
+        await ctx.SaveChangesAsync();
+
+        var um = RoleHelper.CreateWithUserId("fac-yes");
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Faculty", "fac-yes");
+
+        var result = await ctrl.Details(student.Id);
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Details_AsStudent_FiltersUnreleasedExamResults()
+    {
+        var (ctx, course, student, _) = await DbFactory.WithEnrolmentAsync();
+
+        var examReleased = new Exam { CourseId = course.Id, Title = "Released", Date = DateTime.Today, MaxScore = 100, ResultsReleased = true };
+        var examPending = new Exam { CourseId = course.Id, Title = "Pending", Date = DateTime.Today, MaxScore = 100, ResultsReleased = false };
+        ctx.Exams.AddRange(examReleased, examPending);
+        await ctx.SaveChangesAsync();
+
+        ctx.ExamResults.AddRange(
+            new ExamResult { ExamId = examReleased.Id, StudentProfileId = student.Id, Score = 80, Grade = "A2" },
+            new ExamResult { ExamId = examPending.Id, StudentProfileId = student.Id, Score = 55, Grade = "C3" }
+        );
+        await ctx.SaveChangesAsync();
+
+        var um = RoleHelper.CreateWithUserId(student.IdentityUserId);
+        var ctrl = new StudentsController(ctx, um);
+        RoleHelper.SetRole(ctrl, "Student", student.IdentityUserId);
+
+        var result = await ctrl.Details(student.Id);
+        var view = Assert.IsType<ViewResult>(result);
+        var model = Assert.IsType<StudentProfile>(view.Model);
+        Assert.Single(model.ExamResults);
+        Assert.True(model.ExamResults.First().Exam.ResultsReleased);
+        await ctx.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task StudentsController_Edit_Post_InvalidModel_ReturnsView()
+    {
+        var (ctx, _, student, _) = await DbFactory.WithEnrolmentAsync();
+        var ctrl = new StudentsController(ctx, MockUserManager.Create());
+        ctrl.ModelState.AddModelError("Name", "Required");
+        var result = await ctrl.Edit(student.Id, student);
+        Assert.IsType<ViewResult>(result);
+        await ctx.DisposeAsync();
+    }
+}
+
+public class BranchesControllerExtraTests
+{
+    [Fact]
+    public void BranchesController_Create_Get_ReturnsView()
+    {
+        using var ctx = DbFactory.Create();
+        var ctrl = new BranchesController(ctx);
+        Assert.IsType<ViewResult>(ctrl.Create());
     }
 }
